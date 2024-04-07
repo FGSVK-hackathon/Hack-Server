@@ -2,7 +2,7 @@ from fastapi import FastAPI
 import pyttsx3
 import os
 from fastapi.middleware.cors import CORSMiddleware
-
+from serial import Serial
 
 app = FastAPI()
 
@@ -37,3 +37,14 @@ def read_item(text: str):
     engine.runAndWait()
     return {"message": "Text converted to speech successfully"}
 
+
+@app.get("/piano/{notes}")
+def read_item(notes: str):
+    parsed = [int(x) for x in notes.split(",")]
+    with Serial("/dev/tty.usbmodem1103", 9600) as s:
+        for i in range(8):
+            for j in range(4):
+                s.write(parsed[4 * i + j].to_bytes(2, "big"))
+                s.write(int(250).to_bytes(2, "big"))
+            _ = s.readline()
+    return {"message": notes}
